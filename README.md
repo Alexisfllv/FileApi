@@ -1,136 +1,151 @@
-# 📁 FileApi
+# 📄 FileApi (Basic Auth, Java 21, MapStruct, DTO)
 
-> Sistema de gestión documental para entidades públicas. Permite registrar, consultar y descargar documentos administrativos (como informes, oficios y reportes), con filtros por unidad, tipo y fecha.
-
----
-
-## 🎯 Objetivo
-
-Centralizar el almacenamiento y consulta de documentos internos escaneados de una entidad pública, para mejorar la organización, trazabilidad y accesibilidad de la información.
+A simple but functional REST API for document management with file upload/download capabilities and user access control via Basic Authentication. Built with **Java 21**, **Spring Boot**, **MapStruct**, and layered DTO architecture.
 
 ---
 
-## 🧱 Arquitectura del Proyecto
+## 🧩 Business Model
 
-```
-Java 21 + Spring Boot 3
-│
-├── Controller         # Endpoints REST
-├── Service            # Lógica de negocio
-├── Repository         # Acceso a datos (JPA)
-├── Entity             # Modelo Documento
-├── DTO                # Transferencia segura de datos
-├── Mapper             # MapStruct para conversión Entity <-> DTO
-├── Exception Handler  # Manejo global de errores
-└── Security Config    # Seguridad básica con Spring Security
-```
+This system allows registered users to upload various types of files (PDF, DOCX, XLSX), which are stored along with metadata. Users can later list their files or download them. Ideal for document sharing, resume storage, academic records, or collaborative environments.
 
 ---
 
-## 📦 Tecnologías Usadas
+## 📁 Features
 
-* **Java 21**
-* **Spring Boot 3**
-* **Spring Web**
-* **Spring Data JPA**
-* **PostgreSQL**
-* **Spring Security**
-* **Spring Validation**
-* **MapStruct**
-* **Lombok**
-* **Swagger (springdoc-openapi)**
+- 📤 Upload documents
+- 📥 Download documents
+- 📃 List documents per user
+- 🔐 Basic Authentication per user
+- 📦 DTOs for request/response
+- 🔄 Mapping via MapStruct
 
 ---
 
-## 🗃️ Base de datos: PostgreSQL
+## 🔐 Authentication
 
-### Tabla `documento`
+All endpoints are protected using **Basic Auth**. Each user has their own credentials and can only access their own files.
 
-```sql
-CREATE TABLE documento (
-  id SERIAL PRIMARY KEY,
-  nombre VARCHAR(255),
-  tipo VARCHAR(50),
-  unidad VARCHAR(100),
-  fecha DATE,
-  observaciones TEXT,
-  ruta_archivo VARCHAR(255)
-);
+---
+
+## 🗂️ Entities
+
+### `User`
+
+```java
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String username;
+    private String password;
+}
 ```
 
----
+### `Document`
 
-## 🔐 Seguridad
+```java
+@Entity
+public class Document {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long documentId;
 
-* Autenticación básica (Basic Auth).
-* Los endpoints de carga y eliminación de documentos requieren credenciales.
+    private String name;
 
----
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-## 📂 Endpoints REST
+    private String type;
+    private String url;
 
-### 1. Subir documento
-
-`POST /api/documentos`
-
-* multipart/form-data: `archivo`, `nombre`, `tipo`, `unidad`, `fecha`, `observaciones`
-
-### 2. Listar documentos
-
-`GET /api/documentos`
-
-* Filtros opcionales: `tipo`, `unidad`, `fechaDesde`, `fechaHasta`
-
-### 3. Descargar documento
-
-`GET /api/documentos/{id}/descargar`
-
-### 4. Eliminar documento
-
-`DELETE /api/documentos/{id}`
-
----
-
-## 📁 Estructura de Archivos Subidos
-
-```
-/uploads/
-  └── documentos/
-        └── 2025/
-              └── informe-juntos-lima.pdf
+    @ManyToOne
+    private User owner;
+}
 ```
 
 ---
 
-## 🧪 Buenas prácticas aplicadas
+## 📦 DTOs
 
-* Uso de capas separadas (Controller-Service-Repository).
-* Validaciones con `@Valid`.
-* DTOs para ocultar entidad interna.
-* Mapeo automático con **MapStruct**.
-* Documentación REST con Swagger.
-* Seguridad con Spring Security.
-* Registros organizados por año.
+### 📤 Request DTO
+
+```java
+public class DocumentRequestDTO {
+    private String name;
+    private String description;
+    private String type;
+    private MultipartFile file;
+}
+```
+
+### 📥 Response DTO
+
+```java
+public class DocumentResponseDTO {
+    private Long documentId;
+    private String name;
+    private String description;
+    private String type;
+    private String downloadUrl;
+}
+```
 
 ---
 
-## 🚀 Posibles mejoras futuras
+## 🔁 Mapper (MapStruct)
 
-* Firma digital de documentos.
-* Integración con MinIO o Amazon S3.
-* Auditoría de acciones por usuario.
-* Generación de reportes en PDF.
-
----
-
-## 🧠 Inspirado en
-
-* Estándares de gobierno digital (Estonia, Chile, España).
-* Necesidades reales de instituciones como MIDIS, UGEL, Minsa.
+```java
+@Mapper(componentModel = "spring")
+public interface DocumentMapper {
+    Document toEntity(DocumentRequestDTO dto);
+    DocumentResponseDTO toDto(Document entity);
+}
+```
 
 ---
 
-## 📌 Autor
+## 🧪 Sample JSON
 
-**AlexisFllv** – Práctica profesional orientada a soluciones.
+### ✅ Request (Upload)
 
+```json
+{
+  "name": "Invoice July",
+  "description": "Monthly invoice",
+  "type": "pdf",
+  "file": "<binary>"
+}
+```
+
+### ✅ Response
+
+```json
+{
+  "documentId": 1,
+  "name": "Invoice July",
+  "description": "Monthly invoice",
+  "type": "pdf",
+  "downloadUrl": "http://localhost:8080/api/documents/1/download"
+}
+```
+
+---
+
+## 🔧 Endpoints
+
+| Method | Endpoint                    | Description            |
+|--------|-----------------------------|------------------------|
+| POST   | `/api/documents`            | Upload a document      |
+| GET    | `/api/documents`            | List user's documents  |
+| GET    | `/api/documents/{id}`       | Get document metadata  |
+| GET    | `/api/documents/{id}/download` | Download document    |
+
+---
+
+## 🧪 Example cURL (Basic Auth)
+
+```bash
+curl -u user1:password123 http://localhost:8080/api/documents
+```
