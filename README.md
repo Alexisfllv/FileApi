@@ -1,6 +1,6 @@
-# 📁 DocuGestor
+# 📁 FileApi
 
-> Sistema de gestión documental para entidades públicas del Perú. Permite registrar, consultar y descargar documentos administrativos (como informes, oficios y reportes), con filtros por unidad, tipo y fecha.
+> Sistema de gestión documental para entidades públicas. Permite registrar, consultar y descargar documentos administrativos (como informes, oficios y reportes), con filtros por unidad, tipo y fecha.
 
 ---
 
@@ -132,5 +132,5 @@ CREATE TABLE documento (
 
 ## 📌 Autor
 
-**Alexis** – Práctica profesional orientada a soluciones reales del Estado Peruano.
+**AlexisFllv** – Práctica profesional orientada a soluciones.
 
